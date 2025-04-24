@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Cegonha IDE + Bing Voz</title>
+  <style>
+    /* Estilo para a IDE */
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, sans-serif;
+      background: #f0f4f8;
+      text-align: center;
+      transition: background-color 0.3s, color 0.3s;
+    }
+    header {
+      background-color: #4caf50;
+      color: white;
+      padding: 20px;
+      font-size: 24px;
+      font-weight: bold;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .editor {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      padding: 20px;
+    }
+    textarea {
+      width: 30%;
+      height: 200px;
+      font-family: monospace;
+      font-size: 14px;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      background: white;
+      resize: vertical;
+    }
+    button {
+      padding: 12px 20px;
+      margin: 10px;
+      background-color: #4caf50;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    button:hover {
+      background-color: #388e3c;
+    }
+    iframe {
+      width: 90%;
+      height: 300px;
+      border: 2px solid #4caf50;
+      border-radius: 10px;
+      background: white;
+    }
+    #mensagemVoz {
+      margin-top: 20px;
+      font-size: 18px;
+      color: #333;
+    }
+    .dark-mode {
+      background-color: #2e2e2e;
+      color: #fff;
+    }
+    .dark-mode header {
+      background-color: #333;
+    }
+    .dark-mode textarea {
+      background-color: #444;
+      color: #fff;
+    }
+    .dark-mode iframe {
+      background-color: #444;
+    }
+    @media (max-width: 768px) {
+      textarea {
+        width: 90%;
+      }
+      header {
+        flex-direction: column;
+        gap: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    Cegonha IDE 🕊️
+    <div>
+      <button onclick="pesquisaPorVoz()">🎤 Falar & Pesquisar no Bing</button>
+      <button onclick="mudarTema()">🌙 / 🌞 Mudar Tema</button>
+    </div>
+  </header>
+
+  <div class="editor">
+    <textarea id="html" placeholder="HTML aqui..."><h1>Olá, Mundo!</h1></textarea>
+    <textarea id="css" placeholder="CSS aqui...">h1 { color: purple; text-align: center; }</textarea>
+    <textarea id="js" placeholder="JS aqui...">console.log("Executado com sucesso!");</textarea>
+  </div>
+
+  <button onclick="executar()">▶️ Executar Código</button>
+  <button onclick="limparEditor()">🧹 Limpar Editor</button>
+
+  <div id="mensagemVoz"></div>
+  <iframe id="preview"></iframe>
+
+  <script>
+    // Função para executar o código
+    function executar() {
+      const html = document.getElementById("html").value;
+      const css = `<style>${document.getElementById("css").value}</style>`;
+      const js = `<script>${document.getElementById("js").value}<\/script>`;
+      const code = html + css + js;
+
+      const iframe = document.getElementById("preview");
+      const doc = iframe.contentDocument || iframe.contentWindow.document;
+      doc.open();
+      doc.write(code);
+      doc.close();
+    }
+
+    // Função para limpar os campos do editor
+    function limparEditor() {
+      document.getElementById("html").value = "";
+      document.getElementById("css").value = "";
+      document.getElementById("js").value = "";
+      exibirMensagem("🧹 Editor limpo!");
+    }
+
+    // Função de voz para ler as mensagens
+    function falar(texto) {
+      const fala = new SpeechSynthesisUtterance(texto);
+      fala.lang = "pt-BR";
+      speechSynthesis.speak(fala);
+    }
+
+    // Função para exibir mensagens na tela
+    function exibirMensagem(msg) {
+      document.getElementById("mensagemVoz").innerText = msg;
+    }
+
+    // Função para realizar pesquisa por voz no Bing
+    function pesquisaPorVoz() {
+      if (!('webkitSpeechRecognition' in window)) {
+        alert("Este navegador não suporta reconhecimento de voz.");
+        return;
+      }
+
+      const recognition = new webkitSpeechRecognition();
+      recognition.lang = "pt-BR";
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+
+      recognition.onstart = () => {
+        console.log("🎤 Ouvindo...");
+        exibirMensagem("🎤 Fale agora... Ex: 'pesquisar gatos fofos'");
+        falar("Pode falar o que quer pesquisar no Bing.");
+      };
+
+      recognition.onresult = (event) => {
+        const texto = event.results[0][0].transcript;
+        console.log("🔍 Comando reconhecido:", texto);
+        const termo = texto.toLowerCase().replace("pesquisar", "").trim();
+
+        if (termo) {
+          exibirMensagem(`🔍 Pesquisando: ${termo}`);
+          falar("Pesquisando por " + termo);
+          const url = "https://www.bing.com/search?q=" + encodeURIComponent(termo);
+          window.open(url, "_blank");
+        } else {
+          exibirMensagem("😕 Nenhum termo reconhecido.");
+          falar("Não entendi. Tente dizer: pesquisar gatos ou pesquisar clima.");
+        }
+      };
+
+      recognition.onerror = (event) => {
+        console.error("Erro ao reconhecer:", event.error);
+        exibirMensagem("⚠️ Erro ao reconhecer voz: " + event.error);
+        falar("Houve um erro ao reconhecer sua voz.");
+      };
+
+      recognition.onend = () => {
+        console.log("🎤 Reconhecimento de voz finalizado.");
+        setTimeout(() => {
+          exibirMensagem("🎤 Reconhecimento de voz pronto para nova pesquisa.");
+        }, 1000); // Aguardar 1 segundo antes de permitir outra pesquisa
+      };
+
+      recognition.start();
+    }
+
+    // Função para alternar entre tema claro e escuro
+    function mudarTema() {
+      document.body.classList.toggle("dark-mode");
+      const tema = document.body.classList.contains("dark-mode") ? "escuro" : "claro";
+      exibirMensagem(`🌙 Tema ${tema} ativado.`);
+    }
+
+    // Função para executar o código com comando de voz
+    function executarComandoVoz() {
+      if (!('webkitSpeechRecognition' in window)) {
+        alert("Este navegador não suporta reconhecimento de voz.");
+        return;
+      }
+
+      const recognition = new webkitSpeechRecognition();
+      recognition.lang = "pt-BR";
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+
+      recognition.onstart = () => {
+        console.log("🎤 Ouvindo...");
+        exibirMensagem("🎤 Fale agora... Ex: 'executar código'");
+        falar("Pode falar o comando para executar código.");
+      };
+
+      recognition.onresult = (event) => {
+        const texto = event.results[0][0].transcript;
+        console.log("🔍 Comando reconhecido:", texto);
+
+        if (texto.toLowerCase().includes("executar código")) {
+          executar();
+          exibirMensagem("▶️ Código Executado com Sucesso!");
+          falar("Código executado com sucesso!");
+        } else if (texto.toLowerCase().includes("limpar editor")) {
+          limparEditor();
+        } else {
+          exibirMensagem("😕 Não entendi o comando.");
+          falar("Não entendi. Tente dizer: executar código ou limpar editor.");
+        }
+      };
+
+      recognition.onerror = (event) => {
+        console.error("Erro ao reconhecer:", event.error);
+        exibirMensagem("⚠️ Erro ao reconhecer voz: " + event.error);
+        falar("Houve um erro ao reconhecer sua voz.");
+      };
+
+      recognition.onend = () => {
+        console.log("🎤 Reconhecimento de voz finalizado.");
+      };
+
+      recognition.start();
+    }
+
+    // Chamada inicial para executar o código ao carregar a página
+    window.onload = executar;
+  </script>
+</body>
+</html>

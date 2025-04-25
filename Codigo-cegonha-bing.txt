@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Pesquisar com a Cegonha Bing</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      text-align: center;
+      background: linear-gradient(to bottom right, #e0f7fa, #fce4ec);
+      margin: 0;
+      padding: 0;
+      animation: fadeIn 1.5s ease-in-out;
+    }
+
+    h1 {
+      color: #2a2a72;
+      margin-top: 30px;
+      animation: slideDown 1s ease-out;
+    }
+
+    img {
+      width: 80%;
+      max-width: 600px;
+      border-radius: 15px;
+      margin: 30px auto;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+      animation: zoomIn 1.2s ease-out;
+    }
+
+    h2 {
+      color: #333;
+      margin-top: 40px;
+      animation: fadeIn 2s ease-in;
+    }
+
+    input[type="text"] {
+      padding: 12px;
+      width: 300px;
+      font-size: 16px;
+      margin-top: 10px;
+      border: 2px solid #ccc;
+      border-radius: 8px;
+      transition: box-shadow 0.3s ease;
+    }
+
+    input[type="text"]:focus {
+      box-shadow: 0 0 10px #2196f3;
+      outline: none;
+    }
+
+    button {
+      padding: 12px 25px;
+      font-size: 16px;
+      margin: 10px;
+      background-color: #4caf50;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: transform 0.2s, background-color 0.3s;
+    }
+
+    button:hover {
+      background-color: #45a049;
+      transform: scale(1.05);
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes slideDown {
+      from { transform: translateY(-30px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    @keyframes zoomIn {
+      from { transform: scale(0.9); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+  <h1>Pesquisar com a Cegonha Bing</h1>
+
+  <img src="https://cdn.pixabay.com/photo/2017/09/14/21/11/storks-2750436_1280.jpg" alt="Cegonha">
+
+  <h2>Pesquise no Bing por voz:</h2>
+  <button onclick="pesquisarPorVozBing()">🎤 Falar e pesquisar com a Cegonha</button>
+
+  <h2>Pesquise algo no Bing:</h2>
+  <input type="text" id="pesquisaBing" placeholder="Digite sua pesquisa maluca" />
+  <button onclick="pesquisarNoBing()">Pesquisar no Cegonha Bing</button>
+
+  <script>
+    function pesquisarNoBing() {
+      const pesquisa = document.getElementById("pesquisaBing").value;
+      if (pesquisa.trim() !== "") {
+        const url = "https://www.bing.com/search?q=" + encodeURIComponent(pesquisa);
+        window.open(url, "_blank");
+      }
+    }
+
+    function pesquisarPorVozBing() {
+      if (!('webkitSpeechRecognition' in window)) {
+        alert("Seu navegador não suporta reconhecimento de voz.");
+        return;
+      }
+
+      const recognition = new webkitSpeechRecognition();
+      recognition.lang = "pt-BR";
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+
+      recognition.onstart = function () {
+        console.log("Reconhecimento de voz iniciado...");
+      };
+
+      recognition.onresult = function(event) {
+        const voz = event.results[0][0].transcript;
+        console.log("Texto reconhecido:", voz);
+        const url = "https://www.bing.com/search?q=" + encodeURIComponent(voz);
+        window.open(url, "_blank");
+      };
+
+      recognition.onerror = function(event) {
+        console.error("Erro ao reconhecer voz:", event.error);
+        alert("Erro ao reconhecer voz: " + event.error);
+      };
+
+      recognition.start();
+    }
+
+  </script>
+<hr style="margin: 50px auto; width: 80%; border: 1px solid #ccc;">
+<h2>Testador de código HTML + JavaScript</h2>
+
+<textarea id="editor" style="width: 90%; height: 200px; font-family: monospace; font-size: 14px; padding: 10px; border-radius: 8px; border: 1px solid #aaa;">
+<!-- Escreva seu código HTML aqui -->
+<h3>Olá mundo!</h3>
+<script>
+  console.log("Olá do iframe!");
+</script>
+</textarea>
+<br>
+<button onclick="executarCodigo()">▶️ Executar Código</button>
+<br><br>
+<iframe id="preview" style="width: 90%; height: 300px; border: 2px solid #4caf50; border-radius: 10px;"></iframe>
+
+<script>
+  function executarCodigo() {
+    const code = document.getElementById("editor").value;
+    const iframe = document.getElementById("preview");
+    const doc = iframe.contentDocument || iframe.contentWindow.document;
+    doc.open();
+    doc.write(code);
+    doc.close();
+  }
+
+  // Executa o conteúdo inicial ao carregar
+  window.onload = executarCodigo;
+</script>
+</body>
+</html>

@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Base de Dados Cegonha Universal</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    /* Imagem de fundo e fonte básica */
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-image: url('https://images.unsplash.com/photo-1537498425277-c283d32ef9db');
+      background-size: cover;
+      background-attachment: fixed;
+      background-position: center;
+      color: #fff;
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    h1 {
+      text-align: center;
+      background: rgba(0, 0, 0, 0.6);
+      padding: 20px;
+      margin: 0;
+      font-size: 2em;
+      border-bottom: 2px solid #fff;
+    }
+
+    .section {
+      background: rgba(0, 0, 0, 0.6);
+      margin: 20px auto;
+      padding: 20px;
+      max-width: 800px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px #000;
+    }
+
+    textarea, input[type="text"], input[type="file"], button {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      font-size: 1em;
+      border: none;
+      border-radius: 5px;
+    }
+
+    textarea, input[type="text"], input[type="file"] {
+      background: #fff;
+      color: #000;
+    }
+
+    button {
+      background-color: #008CBA;
+      color: white;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #005f73;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+
+    table, th, td {
+      border: 1px solid #fff;
+    }
+
+    th, td {
+      padding: 10px;
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    iframe {
+      background: #fff;
+      height: 60vh;
+      width: 100%;
+      border: 1px solid #ccc;
+    }
+
+    /* Modo noturno */
+    body.night {
+      background-color: #121212;
+      background-image: none;
+      color: #eee;
+    }
+
+    body.night .section {
+      background: #1e1e1e;
+    }
+
+    body.night textarea,
+    body.night input[type="text"],
+    body.night input[type="file"] {
+      background: #333;
+      color: #fff;
+    }
+
+    body.night button {
+      background-color: #444;
+    }
+
+    body.night table, body.night th, body.night td {
+      border: 1px solid #777;
+    }
+
+    /* Responsividade para telas menores */
+    @media (max-width: 768px) {
+      body {
+        background-attachment: scroll;
+      }
+
+      h1 {
+        font-size: 1.5em;
+        padding: 15px;
+      }
+
+      textarea, input, button {
+        font-size: 1em;
+      }
+
+      iframe {
+        height: 50vh;
+      }
+    }
+  </style>
+</head>
+<body>
+  
+<h1>Base de Dados e Pesquisa - Cegonha Universal</h1>
+
+<div class="section">
+  <h2>Inserir Dados</h2>
+  <textarea id="inputData" placeholder="Digite os dados para inserir..."></textarea>
+  <button onclick="inserirDado()">Inserir Dados</button>
+
+  <h2>Pesquisar</h2>
+  <input type="text" id="searchText" placeholder="Digite para buscar..." onkeyup="pesquisarDados()">
+  <button onclick="pesquisarBing()">Pesquisar no Bing</button>
+</div>
+
+<div class="section">
+  <h2>Funções Adicionais</h2>
+  <button onclick="exportarJSON()">Exportar JSON</button>
+  <button onclick="exportarCSV()">Exportar CSV</button>
+  <input type="file" id="fileInput" onchange="importarJSON(event)">
+  <button onclick="limparDados()">Limpar Dados</button>
+  <button onclick="alternarModo()">🌗 Alternar Modo Noturno</button>
+</div>
+
+<div class="section">
+  <h2>Base de Dados</h2>
+  <table id="dataTable">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Texto</th>
+        <th>Ações</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
+
+<div class="section">
+  <h2>📁 Abrir Arquivo Local</h2>
+  <input type="file" id="fileLoader" onchange="mostrarArquivo()" />
+  <br><br>
+  <iframe id="fileViewer" width="100%" height="500px" style="border:1px solid #ccc;"></iframe>
+</div>
+
+<div class="section">
+  <h2>🤖 Chatbot</h2>
+  <input type="text" id="perguntaChatbot" placeholder="Pergunte algo..." />
+  <button onclick="responderChat()">Perguntar</button>
+  <p id="respostaChat" style="margin-top: 10px; background: rgba(255,255,255,0.1); padding: 10px; border-radius: 5px;"></p>
+<button onclick="limparChat()">Limpar Chat</button>
+</div>
+
+<script>
+  function carregarDados() {
+    return JSON.parse(localStorage.getItem("dados")) || [];
+  }
+
+  function salvarDados(dados) {
+    localStorage.setItem("dados", JSON.stringify(dados));
+  }
+
+  function atualizarTabela(dados) {
+    const tbody = document.querySelector("#dataTable tbody");
+    tbody.innerHTML = "";
+    dados.forEach((item, index) => {
+      const row = tbody.insertRow();
+      row.innerHTML = `
+        <td>${item.id}</td>
+        <td>${item.texto}</td>
+        <td>
+          <button onclick="pesquisarNoBing('${item.texto}')">🔎</button>
+          <button onclick="excluirDado(${item.id})">🗑️</button>
+        </td>
+      `;
+    });
+  }
+
+  function inserirDado() {
+    const texto = document.getElementById("inputData").value.trim();
+    if (!texto) {
+      alert("Por favor, insira algum texto!");
+      return;
+    }
+    const dados = carregarDados();
+    const novoDado = { id: dados.length + 1, texto };
+    dados.push(novoDado);
+    salvarDados(dados);
+    document.getElementById("inputData").value = "";
+    atualizarTabela(dados);
+  }
+
+  function excluirDado(id) {
+    if (!confirm("Deseja realmente excluir este item?")) return;
+    let dados = carregarDados().filter(item => item.id !== id);
+    dados.forEach((item, i) => item.id = i + 1);
+    salvarDados(dados);
+    atualizarTabela(dados);
+  }
+
+  function pesquisarDados() {
+    const termo = document.getElementById("searchText").value.toLowerCase();
+    const dados = carregarDados();
+    const filtrados = dados.filter(item => item.texto.toLowerCase().includes(termo));
+    atualizarTabela(filtrados);
+  }
+
+  function pesquisarBing() {
+    const dados = carregarDados();
+    const query = dados.map(item => item.texto).join(" ");
+    window.open(`https://www.bing.com/search?q=${encodeURIComponent(query)}`, "_blank");
+  }
+
+  function pesquisarNoBing(texto) {
+    window.open(`https://www.bing.com/search?q=${encodeURIComponent(texto)}`, "_blank");
+  }
+
+  function exportarJSON() {
+    const dados = carregarDados();
+    const blob = new Blob([JSON.stringify(dados, null, 2)], { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "dados.json";
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+
+  function importarJSON(event) {
+    const file = event.target.files[0];
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const dados = JSON.parse(e.target.result);
+      salvarDados(dados);
+      atualizarTabela(dados);
+    };
+    reader.readAsText(file);
+  }
+function exportarCSV() {
+  const dados = carregarDados();
+  if (dados.length === 0) {
+    alert("Nenhum dado para exportar.");
+    return;
+  }
+
+  let csvContent = "data:text/csv;charset=utf-8,ID,Texto\n";
+  dados.forEach(item => {
+    const linha = `${item.id},"${item.texto.replace(/"/g, '""')}"`; // CSV seguro
+    csvContent += linha + "\n";
+  });
+
+  const encodedUri = encodeURI(csvContent);
+  const link = document.createElement("a");
+  link.setAttribute("href", encodedUri);
+  link.setAttribute("download", "dados.csv");
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+  function limparDados() {
+    if (confirm("Você tem certeza que deseja limpar todos os dados?")) {
+      localStorage.removeItem("dados");
+      atualizarTabela([]);
+    }
+  }
+
+  function alternarModo() {
+    document.body.classList.toggle('night');
+  }
+
+  function mostrarArquivo() {
+    const fileInput = document.getElementById('fileLoader');
+    const file = fileInput.files[0];
+    if (!file) return;
+    const iframe = document.getElementById('fileViewer');
+    const fileURL = URL.createObjectURL(file);
+    iframe.src = fileURL;
+    iframe.onload = () => URL.revokeObjectURL(fileURL);
+  }
+
+  // Iniciar tabela com dados existentes
+  window.onload = () => {
+    atualizarTabela(carregarDados());
+  };
+
+function responderChat() {
+  const pergunta = document.getElementById("perguntaChatbot").value.trim().toLowerCase();
+  const dados = carregarDados();
+
+  const respostaElemento = document.getElementById("respostaChat");
+  respostaElemento.innerHTML = "";
+
+  if (!pergunta || dados.length === 0) {
+    respostaElemento.innerText = "Faça uma pergunta e insira dados primeiro.";
+    return;
+  }
+
+  // Palavras da pergunta (sem acentos e stopwords simples)
+  const stopwords = ["de", "o", "a", "e", "do", "da", "para", "com", "em", "um", "uma"];
+  const palavrasPergunta = pergunta
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .split(/\s+/)
+    .filter(p => p.length > 2 && !stopwords.includes(p));
+
+  // Avaliar cada item e dar uma pontuação
+  const resultados = dados.map(item => {
+    const texto = item.texto.toLowerCase()
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    let pontuacao = 0;
+    palavrasPergunta.forEach(palavra => {
+      if (texto.includes(palavra)) pontuacao++;
+    });
+    return { ...item, pontuacao };
+  }).filter(r => r.pontuacao > 0);
+
+  // Ordenar por maior pontuação
+  resultados.sort((a, b) => b.pontuacao - a.pontuacao);
+
+  // Exibir resultados
+  if (resultados.length > 0) {
+    respostaElemento.innerHTML = "<strong>🤖 Respostas encontradas:</strong><br><ul>" +
+      resultados.slice(0, 3).map(r => `<li>${destacarPalavras(r.texto, palavrasPergunta)}</li>`).join("") +
+      "</ul>";
+  } else {
+    respostaElemento.innerHTML = "🤖 Nenhuma resposta direta encontrada. Tente reformular a pergunta.";
+  }
+}
+
+// Função auxiliar para realçar palavras-chave na resposta
+function destacarPalavras(texto, palavras) {
+  let resultado = texto;
+  palavras.forEach(p => {
+    const regex = new RegExp(`\\b(${p})\\b`, 'gi');
+    resultado = resultado.replace(regex, '<mark>$1</mark>');
+  });
+  return resultado;
+}
+function limparChat() {
+  document.getElementById("perguntaChatbot").value = "";
+  document.getElementById("respostaChat").innerHTML = "";
+}
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('service-worker.js')
+    .then(() => console.log('✔️ Service Worker registrado!'))
+    .catch(err => console.error('Erro no Service Worker:', err));
+}
+
+</script>
+
+
+</body>
+</html>
